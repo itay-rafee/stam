@@ -1,0 +1,53 @@
+import numpy as np
+from numpy.linalg import inv
+
+def kalman(h,f,p,x,z,r,b,u):
+    Q_matrix = 0
+    # Calc X
+    x = f*x+b*u
+    # Calc P
+    p = f*p*f.T + Q_matrix
+    # Update
+    S = h*p*h.T + r
+    S = inv(S)
+    K = p*h.T*S
+    # print("Kalman Gain is:\n", K)
+    x = x + K*(z-h*x)
+    p = p-K*h*p
+    # print("P is:\n", p)
+    return x,p
+    
+if __name__ == "__main__":
+    # X matrix
+    xM = np.matrix([[200],
+                    [0]])
+    # P matrix
+    pM = np.matrix([[7**2,0],    # position std
+                    [0,100**2]]) # velocity std
+    # H matrix
+    hM = np.matrix([[0, 1.0]])
+    # R matrix
+    rM = np.matrix([[7**2]]) # sensor std
+    # F matrix
+    deltaT = 1 # sample every 1 second
+    fM = np.matrix([[1,deltaT],
+                    [0,1]])
+    # U matrix
+    uM = np.matrix([[5]]) # 5 m/s acceleration
+    # B
+    bM = np.matrix([[1/2*deltaT**2],     # after multiply with U matrix: a*(1/2)*t^2
+                    [deltaT]])           # after multiply with U matrix: a*t
+    
+    # set the measurements from the sensor for iteration
+    measurements = [240,284,334,390,450,516]
+    
+    for i in range(0,6):
+        # Update Z matrix
+        zM = np.matrix([measurements[i]])
+        # Call kalman method
+        xM,pM = kalman(hM,fM,pM,xM,zM,rM,bM,uM)
+        print("\n----------------------------------")
+        print("Iteration number", i+1)
+        print("----------------------------------")
+        print("State Vector is:\n", xM)
+        # print("\nP matrix is:\n", pM)
